@@ -1,0 +1,6 @@
+Redit Image Ripper
+
+Retrieves image links contained in reddit submissions and downloads images. The top COUNT submissions of the SUBREDDIT given are downloaded to the SUBDIR of the current working directory. Direct links to image files, imgur image links and imgur albums are supported. Uses mellort's python bindings for the reddit API (https://github.com/mellort/reddit_api/).
+
+usage: readpics.py [-h] SUBREDDIT(without the /r/) COUNT(of submissions to retrieve) SUBDIR(of current dir to store images)
+example: "readpics.py aww 20 pics" will retrieve the first 20 ("hot" ranking) from /r/aww and store them in ./pics/
