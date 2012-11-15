@@ -1,14 +1,17 @@
+#!/usr/bin/python
 import reddit
 import pickle
 import urllib2
 import os
 import os.path
-import re
 import time
 from string import replace
 import codecs
 import argparse
 import json
+import sys
+import traceback
+from datetime import datetime
 
 
 def get_link_type(url):
@@ -78,7 +81,7 @@ def parse_image(url):
 		page = urllib2.urlopen(url).read()
 	except:
 		print " An HTTP exception occured!"
-		return
+		return None
 	
 	#titleStart = page.find("<title>")+7
 	#imagename = page[titleStart:page.find('</title>',titleStart)]
@@ -90,11 +93,11 @@ def parse_image(url):
 	print imageURL
 	return imageURL
 			
-
 def get_hot_urls(r,num,subreddit):	
 	
 	print "Getting Image URLs"
 	hot = r.get_subreddit(subreddit).get_hot(limit=num)
+	print hot
 	links = {}
 	counter = 0
 	
@@ -144,6 +147,8 @@ def download_url_list(url_list,subdir):
 
 			elif link_type == 1:
 				url = parse_image(url)
+				if url is None:
+					continue
 				get_image(url,image_dir)
 				counter +=1
 
@@ -173,10 +178,25 @@ def main():
 
 	parser = argparse.ArgumentParser(description='Download images posted to a subreddit')
 	parser.add_argument('subreddit')
+	parser.add_argument('-l',action='store_true',help='Log output to ./readpics.log',dest='log')
 	parser.add_argument('count',default=100,type=int)
-	parser.add_argument('subdir',default='images')
+	parser.add_argument('subdir',default='images')	
 	args = parser.parse_args()
 	
+	# Redirect output to log file if requested
+	if args.log == True:
+		log_filename = os.path.join(os.getcwd(),"log.txt")
+		try:
+			log_file = open(log_filename, "a")
+
+		except IOError:
+			print "Cannot create log file."
+			quit()
+		sys.stdout = log_file
+		print "# LOG ENTRY BEGINS: " + str(datetime.now())
+
+
+
 	r = reddit.Reddit(user_agent='readpics')
 	
 	print('Attempting to get ' + str(args.count) + " top links from subreddit:" + args.subreddit)
@@ -197,6 +217,7 @@ def main():
 			got_file = open(got_filename,"wb")
 		except IOError:
 			print "Cannot create got file."
+			if args.log == True:print "# LOG ENTRY ENDS: " + str(datetime.now()) + "\n\n"
 			quit()
 					
 		print 'No previous data detected, assuming initial run'
@@ -205,6 +226,7 @@ def main():
 
 		print "\nParsing and downloading\n"
 		print str(download_url_list(links.values(),args.subdir)) + ' files downloaded'
+		if args.log == True:print "# LOG ENTRY ENDS: " + str(datetime.now()) + "\n\n"
 		quit()
 
 
@@ -224,12 +246,14 @@ def main():
 		got_file = open(got_filename,"wb")
 	except IOError:
 		print "Cannot create output file."
+		if args.log == True:print "# LOG ENTRY ENDS: " + str(datetime.now()) + "\n\n"
 		quit()	
 	
 	all_links = dict(old_links.items() + links_to_get.items())
 	pickle.dump(all_links,got_file)
 	print "Writing " + str(len(all_links)) + " URLs to got file"
-	got_file.close()	
+	got_file.close()
+	if args.log == True:print "# LOG ENTRY ENDS: " + str(datetime.now()) + "\n\n"	
 
 if __name__ == '__main__':
   main()
