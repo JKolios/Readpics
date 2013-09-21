@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import reddit
+import praw
 import pickle
 import urllib2
 import os
@@ -197,7 +197,7 @@ def main():
 
 
 
-	r = reddit.Reddit(user_agent='readpics')
+	r = praw.Reddit(user_agent='readpics')
 	
 	print('Attempting to get ' + str(args.count) + " top links from subreddit:" + args.subreddit)
 	print "\nURL Retrieval\n"
